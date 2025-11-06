@@ -673,13 +673,15 @@ void main() {
       await appStore.showManageSubscriptions();
     });
 
-    test('showManageSubscriptions can be called with subscriptionGroupId',
-        () async {
-      final AppStore appStore = AppStore();
-      // Should not throw any exception
-      await appStore.showManageSubscriptions(
-        subscriptionGroupId: 'test_group_id',
-      );
-    });
+    test(
+      'showManageSubscriptions can be called with subscriptionGroupId',
+      () async {
+        final AppStore appStore = AppStore();
+        // Should not throw any exception
+        await appStore.showManageSubscriptions(
+          subscriptionGroupId: 'test_group_id',
+        );
+      },
+    );
   });
 }
