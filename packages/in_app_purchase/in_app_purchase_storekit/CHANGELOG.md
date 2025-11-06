@@ -1,3 +1,7 @@
+## 0.4.7
+
+* Adds `showManageSubscriptions` method to display the subscription management UI sheet (StoreKit 2 API).
+
 ## 0.4.6+1
 
 * Refactors internals for improved testability.
