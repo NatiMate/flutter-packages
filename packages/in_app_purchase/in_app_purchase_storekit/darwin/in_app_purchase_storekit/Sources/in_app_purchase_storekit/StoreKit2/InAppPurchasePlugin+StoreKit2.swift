@@ -331,13 +331,23 @@ extension InAppPurchasePlugin: InAppPurchase2API {
                       details: nil)))
                 return
               }
-              try await AppStore.showManageSubscriptions(
-                in: scene, subscriptionGroupID: subscriptionGroupId)
+              
+              // Handle optional subscriptionGroupId
+              if let groupId = subscriptionGroupId {
+                try await AppStore.showManageSubscriptions(
+                  in: scene, subscriptionGroupID: groupId)
+              } else {
+                try await AppStore.showManageSubscriptions(in: scene)
+              }
             }
           #elseif os(macOS)
             if #available(macOS 12.0, *) {
-              // On macOS, use the simpler API without window scene
-              try await AppStore.showManageSubscriptions(subscriptionGroupID: subscriptionGroupId)
+              // On macOS, handle optional subscriptionGroupId
+              if let groupId = subscriptionGroupId {
+                try await AppStore.showManageSubscriptions(subscriptionGroupID: groupId)
+              } else {
+                try await AppStore.showManageSubscriptions()
+              }
             }
           #endif
           completion(.success(()))
