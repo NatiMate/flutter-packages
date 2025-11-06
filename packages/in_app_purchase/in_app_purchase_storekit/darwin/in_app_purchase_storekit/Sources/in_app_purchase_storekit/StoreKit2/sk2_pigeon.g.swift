@@ -701,6 +701,8 @@ protocol InAppPurchase2API {
   func restorePurchases(completion: @escaping (Result<Void, Error>) -> Void)
   func countryCode(completion: @escaping (Result<String, Error>) -> Void)
   func sync(completion: @escaping (Result<Void, Error>) -> Void)
+  func showManageSubscriptions(
+    subscriptionGroupId: String?, completion: @escaping (Result<Void, Error>) -> Void)
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -931,6 +933,26 @@ class InAppPurchase2APISetup {
       }
     } else {
       syncChannel.setMessageHandler(nil)
+    }
+    let showManageSubscriptionsChannel = FlutterBasicMessageChannel(
+      name:
+        "dev.flutter.pigeon.in_app_purchase_storekit.InAppPurchase2API.showManageSubscriptions\(channelSuffix)",
+      binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      showManageSubscriptionsChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let subscriptionGroupIdArg: String? = nilOrValue(args[0])
+        api.showManageSubscriptions(subscriptionGroupId: subscriptionGroupIdArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      showManageSubscriptionsChannel.setMessageHandler(nil)
     }
   }
 }

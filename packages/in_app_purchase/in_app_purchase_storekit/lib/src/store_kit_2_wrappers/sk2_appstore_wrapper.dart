@@ -21,4 +21,14 @@ final class AppStore {
   Future<void> sync() {
     return hostApi2.sync();
   }
+
+  /// Dart wrapper for StoreKit2's showManageSubscriptions()
+  /// Displays a sheet that enables users to manage their subscriptions.
+  /// The optional [subscriptionGroupId] parameter can be used to display a specific subscription group.
+  /// https://developer.apple.com/documentation/storekit/appstore/showmanagesubscriptions(in:subscriptiongroupid:)
+  Future<void> showManageSubscriptions({String? subscriptionGroupId}) {
+    return hostApi2.showManageSubscriptions(
+      subscriptionGroupId: subscriptionGroupId,
+    );
+  }
 }

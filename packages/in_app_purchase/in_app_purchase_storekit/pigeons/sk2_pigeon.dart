@@ -255,6 +255,10 @@ abstract class InAppPurchase2API {
 
   @async
   void sync();
+
+  // https://developer.apple.com/documentation/storekit/appstore/showmanagesubscriptions(in:subscriptiongroupid:)
+  @async
+  void showManageSubscriptions({String? subscriptionGroupId});
 }
 
 @FlutterApi()

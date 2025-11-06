@@ -308,6 +308,36 @@ extension InAppPurchasePlugin: InAppPurchase2API {
     }
   }
 
+  /// Wrapper method around StoreKit2's showManageSubscriptions() method
+  /// https://developer.apple.com/documentation/storekit/appstore/showmanagesubscriptions(in:subscriptiongroupid:)
+  /// Displays the subscription management UI sheet for the user
+  func showManageSubscriptions(
+    subscriptionGroupId: String?, completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    if #available(iOS 15.0, macOS 12.0, *) {
+      Task { @MainActor in
+        do {
+          try await AppStore.showManageSubscriptions(
+            in: nil, subscriptionGroupID: subscriptionGroupId)
+          completion(.success(()))
+        } catch {
+          let pigeonError = PigeonError(
+            code: "storekit2_failed_to_show_manage_subscriptions",
+            message: "Failed to show manage subscriptions sheet.",
+            details: "\(error)")
+          completion(.failure(pigeonError))
+        }
+      }
+    } else {
+      completion(
+        .failure(
+          PigeonError(
+            code: "storekit2_unsupported_platform_version",
+            message: "showManageSubscriptions requires iOS 15+ or macOS 12.0+",
+            details: nil)))
+    }
+  }
+
   /// This Task listens  to Transation.updates as shown here
   /// https://developer.apple.com/documentation/storekit/transaction/3851206-updates
   /// This function should be called as soon as the app starts to avoid missing any Transactions done outside of the app.
