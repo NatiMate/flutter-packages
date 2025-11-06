@@ -318,34 +318,47 @@ extension InAppPurchasePlugin: InAppPurchase2API {
       Task { @MainActor in
         do {
           #if os(iOS)
-            if #available(iOS 15.0, *) {
-              // On iOS, we need to get the window scene
-              guard
-                let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene
-              else {
-                completion(
-                  .failure(
-                    PigeonError(
-                      code: "storekit2_no_window_scene",
-                      message: "No active window scene available.",
-                      details: nil)))
-                return
-              }
-              
-              // Handle optional subscriptionGroupId
-              if let groupId = subscriptionGroupId {
+            // On iOS, we need to get the window scene
+            guard
+              let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene
+            else {
+              completion(
+                .failure(
+                  PigeonError(
+                    code: "storekit2_no_window_scene",
+                    message: "No active window scene available.",
+                    details: nil)))
+              return
+            }
+            
+            // Handle optional subscriptionGroupId with proper version checks
+            if let groupId = subscriptionGroupId {
+              // showManageSubscriptions(in:subscriptionGroupID:) is only available in iOS 17.0+
+              if #available(iOS 17.0, *) {
                 try await AppStore.showManageSubscriptions(
                   in: scene, subscriptionGroupID: groupId)
               } else {
+                // For iOS 15-16, we can only show all subscriptions, not a specific group
+                try await AppStore.showManageSubscriptions(in: scene)
+              }
+            } else {
+              // showManageSubscriptions(in:) is available from iOS 15.0+
+              if #available(iOS 15.0, *) {
                 try await AppStore.showManageSubscriptions(in: scene)
               }
             }
           #elseif os(macOS)
-            if #available(macOS 12.0, *) {
-              // On macOS, handle optional subscriptionGroupId
-              if let groupId = subscriptionGroupId {
+            // On macOS, handle optional subscriptionGroupId
+            if let groupId = subscriptionGroupId {
+              if #available(macOS 13.0, *) {
+                // Assuming macOS 13.0+ for subscriptionGroupID parameter
                 try await AppStore.showManageSubscriptions(subscriptionGroupID: groupId)
               } else {
+                // For earlier macOS versions, show all subscriptions
+                try await AppStore.showManageSubscriptions()
+              }
+            } else {
+              if #available(macOS 12.0, *) {
                 try await AppStore.showManageSubscriptions()
               }
             }
