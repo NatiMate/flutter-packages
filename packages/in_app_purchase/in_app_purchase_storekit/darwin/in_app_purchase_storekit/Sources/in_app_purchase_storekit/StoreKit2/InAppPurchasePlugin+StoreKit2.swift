@@ -317,8 +317,29 @@ extension InAppPurchasePlugin: InAppPurchase2API {
     if #available(iOS 15.0, macOS 12.0, *) {
       Task { @MainActor in
         do {
-          try await AppStore.showManageSubscriptions(
-            in: nil, subscriptionGroupID: subscriptionGroupId)
+          #if os(iOS)
+            if #available(iOS 15.0, *) {
+              // On iOS, we need to get the window scene
+              guard
+                let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene
+              else {
+                completion(
+                  .failure(
+                    PigeonError(
+                      code: "storekit2_no_window_scene",
+                      message: "No active window scene available.",
+                      details: nil)))
+                return
+              }
+              try await AppStore.showManageSubscriptions(
+                in: scene, subscriptionGroupID: subscriptionGroupId)
+            }
+          #elseif os(macOS)
+            if #available(macOS 12.0, *) {
+              // On macOS, use the simpler API without window scene
+              try await AppStore.showManageSubscriptions(subscriptionGroupID: subscriptionGroupId)
+            }
+          #endif
           completion(.success(()))
         } catch {
           let pigeonError = PigeonError(
