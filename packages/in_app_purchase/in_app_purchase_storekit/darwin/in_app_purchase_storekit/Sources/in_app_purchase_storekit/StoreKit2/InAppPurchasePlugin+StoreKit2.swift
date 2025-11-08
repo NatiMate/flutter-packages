@@ -308,6 +308,80 @@ extension InAppPurchasePlugin: InAppPurchase2API {
     }
   }
 
+  /// Wrapper method around StoreKit2's showManageSubscriptions() method
+  /// https://developer.apple.com/documentation/storekit/appstore/showmanagesubscriptions(in:subscriptiongroupid:)
+  /// Displays the subscription management UI sheet for the user
+  func showManageSubscriptions(
+    subscriptionGroupId: String?, completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    if #available(iOS 15.0, macOS 12.0, *) {
+      Task { @MainActor in
+        do {
+          #if os(iOS)
+            // On iOS, we need to get the window scene
+            guard
+              let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene
+            else {
+              completion(
+                .failure(
+                  PigeonError(
+                    code: "storekit2_no_window_scene",
+                    message: "No active window scene available.",
+                    details: nil)))
+              return
+            }
+            
+            // Handle optional subscriptionGroupId with proper version checks
+            if let groupId = subscriptionGroupId {
+              // showManageSubscriptions(in:subscriptionGroupID:) is only available in iOS 17.0+
+              if #available(iOS 17.0, *) {
+                try await AppStore.showManageSubscriptions(
+                  in: scene, subscriptionGroupID: groupId)
+              } else {
+                // For iOS 15-16, we can only show all subscriptions, not a specific group
+                try await AppStore.showManageSubscriptions(in: scene)
+              }
+            } else {
+              // showManageSubscriptions(in:) is available from iOS 15.0+
+              if #available(iOS 15.0, *) {
+                try await AppStore.showManageSubscriptions(in: scene)
+              }
+            }
+          #elseif os(macOS)
+            // On macOS, handle optional subscriptionGroupId
+            if let groupId = subscriptionGroupId {
+              if #available(macOS 13.0, *) {
+                // Assuming macOS 13.0+ for subscriptionGroupID parameter
+                try await AppStore.showManageSubscriptions(subscriptionGroupID: groupId)
+              } else {
+                // For earlier macOS versions, show all subscriptions
+                try await AppStore.showManageSubscriptions()
+              }
+            } else {
+              if #available(macOS 12.0, *) {
+                try await AppStore.showManageSubscriptions()
+              }
+            }
+          #endif
+          completion(.success(()))
+        } catch {
+          let pigeonError = PigeonError(
+            code: "storekit2_failed_to_show_manage_subscriptions",
+            message: "Failed to show manage subscriptions sheet.",
+            details: "\(error)")
+          completion(.failure(pigeonError))
+        }
+      }
+    } else {
+      completion(
+        .failure(
+          PigeonError(
+            code: "storekit2_unsupported_platform_version",
+            message: "showManageSubscriptions requires iOS 15+ or macOS 12.0+",
+            details: nil)))
+    }
+  }
+
   /// This Task listens  to Transation.updates as shown here
   /// https://developer.apple.com/documentation/storekit/transaction/3851206-updates
   /// This function should be called as soon as the app starts to avoid missing any Transactions done outside of the app.

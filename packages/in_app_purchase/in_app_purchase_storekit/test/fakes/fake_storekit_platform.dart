@@ -476,6 +476,9 @@ class FakeStoreKit2Platform implements InAppPurchase2API {
   Future<void> sync() async {}
 
   @override
+  Future<void> showManageSubscriptions({String? subscriptionGroupId}) async {}
+
+  @override
   Future<bool> isWinBackOfferEligible(String productId, String offerId) async {
     if (!validProductIDs.contains(productId)) {
       throw PlatformException(
